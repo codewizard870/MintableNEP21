@@ -18,6 +18,14 @@ macro_rules! impl_fungible_token_core {
                 self.$token.ft_transfer(receiver_id, amount, memo)
             }
 
+            fn ft_mint(
+                &mut self,
+                account_id: AccountId,
+                amount: U128
+            ){
+                self.$token.ft_mint(account_id, amount)
+            }
+
             #[payable]
             fn ft_transfer_call(
                 &mut self,

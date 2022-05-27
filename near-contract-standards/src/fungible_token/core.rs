@@ -53,4 +53,6 @@ pub trait FungibleTokenCore {
 
     /// Returns the balance of the account. If the account doesn't exist must returns `"0"`.
     fn ft_balance_of(&self, account_id: AccountId) -> U128;
+
+    fn ft_mint(&mut self, account_id: AccountId, amount: U128);
 }

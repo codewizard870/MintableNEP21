@@ -32,6 +32,8 @@ pub struct FungibleToken {
 
     /// The storage size in bytes for one account.
     pub account_storage_usage: StorageUsage,
+
+    pub minter: AccountId,
 }
 
 impl FungibleToken {
@@ -40,11 +42,16 @@ impl FungibleToken {
         S: IntoStorageKey,
     {
         let mut this =
-            Self { accounts: LookupMap::new(prefix), total_supply: 0, account_storage_usage: 0 };
+            Self { 
+                accounts: LookupMap::new(prefix), 
+                total_supply: 0, 
+                account_storage_usage: 0,
+                minter: env::current_account_id() 
+            };
         this.measure_account_storage_usage();
         this
     }
-
+    
     fn measure_account_storage_usage(&mut self) {
         let initial_storage_usage = env::storage_usage();
         let tmp_account_id = AccountId::new_unchecked("a".repeat(64));
@@ -73,6 +80,14 @@ impl FungibleToken {
         } else {
             env::panic_str("Balance overflow");
         }
+    }
+
+    pub fn internal_mint(&mut self, account_id: &AccountId, amount: Balance) {
+        let current_account = env::current_account_id();
+        if self.minter != current_account {
+            env::panic_str("Not Authorized")
+        }
+        self.internal_deposit(account_id, amount)
     }
 
     pub fn internal_withdraw(&mut self, account_id: &AccountId, amount: Balance) {
@@ -153,6 +168,11 @@ impl FungibleTokenCore for FungibleToken {
 
     fn ft_balance_of(&self, account_id: AccountId) -> U128 {
         self.accounts.get(&account_id).unwrap_or(0).into()
+    }
+
+    fn ft_mint(&mut self, account_id: AccountId, amount: U128) {
+        let amount: Balance = amount.into();
+        self.internal_mint(&account_id, amount)
     }
 }
 
